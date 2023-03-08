@@ -4,15 +4,13 @@ from PIL import Image
 from tensorflow.keras.utils import to_categorical
 import numpy as np
 import gc
-# import multiprocessing
-
-NUMBER_THREADS = 4
+import multiprocessing
 
 def divideChunks(list, chunkSize):
     for i in range(0, len(list), chunkSize):
         yield list[i:i + chunkSize]
 
-def loadChunkFiles(dataset, chunk, imageSize):
+def loadChunkFiles(index, dataset, chunk, imageSize, sendEnd):
     data = []
     for filename in chunk:
         file = os.path.join(dataset, filename)
@@ -30,48 +28,42 @@ def loadChunkFiles(dataset, chunk, imageSize):
             np.asarray(imageCrop, dtype="int32").flatten(), 
             quadrant - 1
         ])
-    return data
+    print("DATASET LOADED ON PROCESS #", index, "- IMAGES LOADED:", len(data))
+    sendEnd.send(data)
 
-# def worker(procnum, send_end):
-#     '''worker function'''
-#     result = str(procnum) + ' - ' + str(os.getpid()) + ' represent!'
-#     print(result)
-#     send_end.send(result)
-
-def datasetLoader(dataset, imageSize):
+def datasetLoader(dataset, imageSize, numberProcesses):
     data = []
     filenames = os.listdir(dataset)
     size = len(filenames)
-    chunkSize = int(size/NUMBER_THREADS)
+    chunkSize = int(size/numberProcesses)
 
     chunks = list(divideChunks(filenames, chunkSize))
-    if len(chunks) > NUMBER_THREADS:
+    if len(chunks) > numberProcesses:
         chunks.pop()
 
-    # jobs = []
-    # pipe_list = []
-    # for i in range(NUMBER_THREADS):
-    #     recv_end, send_end = multiprocessing.Pipe(False)
-    #     process = multiprocessing.Process(target = worker, args = (i, send_end))
-    #     jobs.append(process)
-    #     pipe_list.append(recv_end)
-    #     process.start()
+    jobs = []
+    pipeList = []
+    for index, chunk in enumerate(chunks):
+        receiverEnd, senderEnd = multiprocessing.Pipe(False)
+        process = multiprocessing.Process(target = loadChunkFiles, args = (index, dataset, chunk, imageSize, senderEnd))
+        jobs.append(process)
+        pipeList.append(receiverEnd)
+        process.start()
     
-    # for proc in jobs:
-    #     proc.join()
-    # result_list = [x.recv() for x in pipe_list]
-    # print(result_list)
+    resultsList = [x.recv() for x in pipeList]
     
-    print("LOADING DATASET - SIZE:", size)
-    for chunk in chunks:
-        data.extend(loadChunkFiles(dataset, chunk, imageSize))
-        print("PERCENTAGE LOADED: %.2f%%" % ((len(data)/size) * 100), end='\r')  
+    for process in jobs:
+        process.join()
+    
+    for result in resultsList:
+        data.extend(result)
+
     print("DATASET LOADED - IMAGES LOADED:", len(data))
     return data
 
-def loadDataset(dataset, imageSize):
+def loadDataset(dataset, imageSize, numberProcesses):
     df = pd.DataFrame(
-        datasetLoader(dataset, imageSize), 
+        datasetLoader(dataset, imageSize, numberProcesses), 
         columns=['number', 'image', 'quadrant']
     )
     print(df.head())

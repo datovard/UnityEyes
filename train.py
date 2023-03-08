@@ -15,6 +15,7 @@ BATCH_SIZE = 64
 NUM_EPOCHS = 100
 INIT_LR = 5e-3
 
+NUMBER_PROCESSES = 10
 FILENAME = './input/results.csv'
 DATASET = './input/train/Dataset 1/'
 
@@ -26,47 +27,47 @@ def polynomialDecay(epoch):
     return alpha
 
 if __name__ == '__main__':
-    X, y, y_labeled = loadDataset(DATASET, IMAGE_SIZE)
-    # trainX, testX, trainY, testY = train_test_split(X, y_labeled, test_size=.3)
+    X, y, y_labeled = loadDataset(DATASET, IMAGE_SIZE, NUMBER_PROCESSES)
+    trainX, testX, trainY, testY = train_test_split(X, y_labeled, test_size=.3)
 
-    # augmentation = ImageDataGenerator(
-    #     rotation_range = 2,
-    #     width_shift_range = 0.3,
-    #     height_shift_range = 0.3,
-    #     fill_mode = "nearest")
+    augmentation = ImageDataGenerator(
+        rotation_range = 2,
+        width_shift_range = 0.3,
+        height_shift_range = 0.3,
+        fill_mode = "nearest")
 
-    # callbacks = [LearningRateScheduler(polynomialDecay)]
+    callbacks = [LearningRateScheduler(polynomialDecay)]
 
-    # optimizer = SGD(lr = INIT_LR, momentum = 0.9)
+    optimizer = SGD(lr = INIT_LR, momentum = 0.9)
 
-    # model = MiniGoogleNet.MiniGoogleNet(width = IMAGE_SIZE[1], height = IMAGE_SIZE[0], depth = IMAGE_SIZE[2], classes = 9)
-    # model.compile(
-    #     loss = "categorical_crossentropy",
-    #     optimizer = optimizer,
-    #     metrics = ["accuracy"])
+    model = MiniGoogleNet.MiniGoogleNet(width = IMAGE_SIZE[1], height = IMAGE_SIZE[0], depth = IMAGE_SIZE[2], classes = 9)
+    model.compile(
+        loss = "categorical_crossentropy",
+        optimizer = optimizer,
+        metrics = ["accuracy"])
 
-    # history = model.fit(
-    #     augmentation.flow(trainX, trainY, batch_size = BATCH_SIZE),
-    #     validation_data = (testX, testY),
-    #     steps_per_epoch = len(trainX) // BATCH_SIZE,
-    #     epochs = NUM_EPOCHS, 
-    #     callbacks = callbacks, 
-    #     verbose = 1)
+    history = model.fit(
+        augmentation.flow(trainX, trainY, batch_size = BATCH_SIZE),
+        validation_data = (testX, testY),
+        steps_per_epoch = len(trainX) // BATCH_SIZE,
+        epochs = NUM_EPOCHS, 
+        callbacks = callbacks, 
+        verbose = 1)
 
-    # model.save('./output/modelo_GoogLeNet_FULL.h5')
+    model.save('./output/modelo_GoogLeNet_FULL.h5')
 
-    # plt.plot(history.history['accuracy'])
-    # plt.plot(history.history['val_accuracy'])
-    # plt.title('model accuracy')
-    # plt.ylabel('accuracy')
-    # plt.xlabel('epoch')
-    # plt.legend(['train', 'val'], loc = 'upper left')
-    # plt.show()
+    plt.plot(history.history['accuracy'])
+    plt.plot(history.history['val_accuracy'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc = 'upper left')
+    plt.show()
 
-    # plt.plot(history.history['loss'])
-    # plt.plot(history.history['val_loss'])
-    # plt.title('model loss')
-    # plt.ylabel('loss')
-    # plt.xlabel('epoch')
-    # plt.legend(['train', 'val'], loc = 'upper left')
-    # plt.show()
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'val'], loc = 'upper left')
+    plt.show()
