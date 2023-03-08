@@ -38,7 +38,7 @@ if __name__ == '__main__':
 
     callbacks = [LearningRateScheduler(polynomialDecay)]
 
-    optimizer = SGD(lr = INIT_LR, momentum = 0.9)
+    optimizer = SGD(learning_rate = INIT_LR, momentum = 0.9)
 
     model = MiniGoogleNet.MiniGoogleNet(width = IMAGE_SIZE[1], height = IMAGE_SIZE[0], depth = IMAGE_SIZE[2], classes = 9)
     model.compile(

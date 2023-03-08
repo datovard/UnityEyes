@@ -7,9 +7,6 @@ from sklearn.metrics import confusion_matrix
 from src.utils.loadDataset import loadDataset
 
 IMAGE_SIZE = (48, 32, 1)
-BATCH_SIZE = 64
-NUM_EPOCHS = 100
-INIT_LR = 5e-3
 
 NUMBER_PROCESSES = 1
 DATASET = './input/test/'
