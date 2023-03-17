@@ -6,6 +6,16 @@ import numpy as np
 import gc
 import multiprocessing
 
+def imageLoader(filepath, imageSize):
+    image = Image.open(filepath)
+    image.load()
+    
+    if(imageSize[2] == 1):
+        image = image.convert('L')
+    image = image.resize(imageSize[:-1])
+
+    return np.asarray(image, dtype="int32").flatten()
+
 def divideChunks(list, chunkSize):
     for i in range(0, len(list), chunkSize):
         yield list[i:i + chunkSize]
@@ -14,21 +24,13 @@ def loadChunkFiles(index, dataset, chunk, imageSize, sendEnd):
     data = []
     for filename in chunk:
         file = os.path.join(dataset, filename)
-        image = Image.open(file)         
         number, quadrant = map(int, filename[:-4].split('_'))
-        #imageCrop = image.crop(IMAGE_SQUARE_CROP)
-
-        if(imageSize[2] == 1):
-            imageCrop = image.convert('L')
-
-        imageCrop.thumbnail(imageSize[:-1])
 
         data.append([
             number, 
-            np.asarray(imageCrop, dtype="int32").flatten(), 
+            imageLoader(file, imageSize), 
             quadrant - 1
         ])
-    print("DATASET LOADED ON PROCESS #", index, "- IMAGES LOADED:", len(data))
     sendEnd.send(data)
 
 def datasetLoader(dataset, imageSize, numberProcesses):
@@ -40,7 +42,8 @@ def datasetLoader(dataset, imageSize, numberProcesses):
     chunks = list(divideChunks(filenames, chunkSize))
     if len(chunks) > numberProcesses:
         chunks.pop()
-
+    
+    print("LOADING DATASET WITH PROCESSES #", len(chunks))
     jobs = []
     pipeList = []
     for index, chunk in enumerate(chunks):
@@ -61,16 +64,16 @@ def datasetLoader(dataset, imageSize, numberProcesses):
     print("DATASET LOADED - IMAGES LOADED:", len(data))
     return data
 
-def loadDataset(dataset, imageSize, numberProcesses):
+def loadDataset(dataset, imageSize, numberProcesses, classSample = None):
     df = pd.DataFrame(
         datasetLoader(dataset, imageSize, numberProcesses), 
         columns=['number', 'image', 'quadrant']
     )
-    print(df.head())
 
     df = df.sample(frac=1).reset_index(drop=True)
-    # df = df.groupby('quadrant').apply(lambda x: x.sample(37))
-
+    if classSample is not None:
+        df = df.groupby('quadrant').apply(lambda x: x.sample(classSample))
+    
     X = df.image.to_numpy()
     y = df.quadrant.to_numpy()
 

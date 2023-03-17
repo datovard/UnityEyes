@@ -29,16 +29,16 @@ class MiniGoogleNet:
         x = self.convolutionModule(inputs, 96, 3, 3, (1, 1),chanDim)
 
         # (Step 2) Two Inception modules followed by a downsample module
-        x = self.inceptionModule(x, 32, 32,32,32,chanDim)
-        x = self.inceptionModule(x, 32, 48, 48,32,chanDim)
+        x = self.inceptionModule(x, 32, 32, 32, 32, chanDim)
+        x = self.inceptionModule(x, 32, 48, 48, 32, chanDim)
         x = self.downsampleModule(x, 80, chanDim)
 
         # (Step 3) Five Inception modules followed by a downsample module
-        x = self.inceptionModule(x, 112, 48, 32, 48,chanDim)
-        x = self.inceptionModule(x, 96, 64, 32,32,chanDim)
-        x = self.inceptionModule(x, 80, 80, 32,32,chanDim)
-        x = self.inceptionModule(x, 48, 96, 32,32,chanDim)
-        x = self.inceptionModule(x, 112, 48, 32, 48,chanDim)
+        x = self.inceptionModule(x, 112, 48, 32, 48, chanDim)
+        x = self.inceptionModule(x, 96, 64, 32, 32, chanDim)
+        x = self.inceptionModule(x, 80, 80, 32, 32, chanDim)
+        x = self.inceptionModule(x, 48, 96, 32, 32, chanDim)
+        x = self.inceptionModule(x, 112, 48, 32, 48, chanDim)
         x = self.downsampleModule(x, 96, chanDim)
 
         # (Step 4) Two Inception modules followed
@@ -64,7 +64,8 @@ class MiniGoogleNet:
             optimizer = SGD(lr = INIT_LR, momentum = MOMENTUM),
             metrics = ["accuracy"])
     
-    def fit(self, trainData, testData, augmentations, batchSize):
+    def fit(self, trainData, testData, augmentations, batchSize, boardCallback):
+        self.callbacks.append(boardCallback)
         return self.model.fit(
             augmentations.flow(trainData[0], trainData[1], batch_size = batchSize),
             validation_data = testData,
