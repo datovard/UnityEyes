@@ -8,25 +8,40 @@ from keras.layers.convolutional import Conv2D, AveragePooling2D, MaxPooling2D
 from keras.layers.core import Activation, Dropout, Dense
 from keras.layers import Flatten, Input, concatenate
 from keras.models import Model
-from keras.callbacks import LearningRateScheduler
-
-NUM_EPOCHS = 100
-INIT_LR = 5e-3
-MOMENTUM = 0.9
+from keras.callbacks import LearningRateScheduler, TensorBoard
+from keras.preprocessing.image import ImageDataGenerator
+import os
+from datetime import datetime
+from src.utils.writeReport import writeRecordOnReport
 
 class MiniGoogleNet:
     model = Model
     callbacks = []
+    name = "miniGoogLeNet"
+    runName = name
+    
+    inputShape = ()
+    batchSize = 64
+    epochs = 100
+    learningRate = 5e-3
+    momentum = 0.9
+    augmentations = {}
 
-    def __init__(self, width, height, depth, classes):
-        inputShape = (height, width, depth)
+    def __init__(self, inputShape, classes, batchSize, epochs, learningRate, momentum, augmentations, logsOutput):
         chanDim = -1
 
+        self.inputShape = inputShape
+        self.batchSize = batchSize
+        self.epochs = epochs
+        self.learningRate = learningRate
+        self.momentum = momentum
+        self.augmentations = ImageDataGenerator(**augmentations)
+
         # (Step 1) Define the model input
-        inputs = Input(shape = inputShape)
+        inputs = Input(shape = self.inputShape)
 
         # First CONV module
-        x = self.convolutionModule(inputs, 96, 3, 3, (1, 1),chanDim)
+        x = self.convolutionModule(inputs, 96, 3, 3, (1, 1), chanDim)
 
         # (Step 2) Two Inception modules followed by a downsample module
         x = self.inceptionModule(x, 32, 32, 32, 32, chanDim)
@@ -55,31 +70,37 @@ class MiniGoogleNet:
         x = Activation("softmax")(x)
 
         # Create the model
-        self.model = Model(inputs, x, name = "googlenet")
-        self.callbacks = [LearningRateScheduler(self.polynomialDecay)]
+        self.model = Model(inputs, x, name = self.name)
+
+        self.runName += "-" + datetime.now().strftime("%Y%m%d-%H%M%S")
+        self.callbacks = [
+            LearningRateScheduler(self.polynomialDecay),
+            TensorBoard(log_dir=logsOutput + self.runName, histogram_freq=1)
+        ]
     
     def compileModel(self):
         self.model.compile(
             loss = "categorical_crossentropy",
-            optimizer = SGD(lr = INIT_LR, momentum = MOMENTUM),
+            optimizer = SGD(learning_rate = self.learningRate, momentum = self.momentum),
             metrics = ["accuracy"])
     
-    def fit(self, trainData, testData, augmentations, batchSize, boardCallback):
-        self.callbacks.append(boardCallback)
+    def fit(self, trainData, testData):
         return self.model.fit(
-            augmentations.flow(trainData[0], trainData[1], batch_size = batchSize),
+            self.augmentations.flow(trainData[0], trainData[1], batch_size = self.batchSize),
             validation_data = testData,
-            steps_per_epoch = len(trainData[0]) // batchSize,
-            epochs = NUM_EPOCHS, 
+            steps_per_epoch = len(trainData[0]) // self.batchSize,
+            epochs = self.epochs, 
             callbacks = self.callbacks, 
             verbose = 1)
 
     def save(self, output):
-        self.model.save(output + 'modelo_GoogLeNet_FULL.h5')
+        if not os.path.exists(output):
+            os.makedirs(output)
+        self.model.save(output + self.runName + '.h5')
 
     def polynomialDecay(self, epoch):
-        maxEpochs = NUM_EPOCHS
-        baseLR = INIT_LR
+        maxEpochs = self.epochs
+        baseLR = self.learningRate
         power = 1.0
         alpha = baseLR * (1 - (epoch / float(maxEpochs))) ** power
         return alpha
@@ -120,3 +141,12 @@ class MiniGoogleNet:
         pool = MaxPooling2D((3,3),strides=(2,2))(input)
         input = concatenate([conv_3x3,pool], axis=chanDim)
         return input
+
+    def getName(self):
+        return self.runName
+    
+    def getSpecialValues(self, configuration):
+        return {
+            "momentum": configuration["momentum"],
+            "hard-test": configuration["hardTest"] if "hardTest" in configuration else False
+        }

@@ -73,7 +73,7 @@ def loadDataset(dataset, imageSize, numberProcesses, classSample = None):
     df = df.sample(frac=1).reset_index(drop=True)
     if classSample is not None:
         df = df.groupby('quadrant').apply(lambda x: x.sample(classSample))
-    
+
     X = df.image.to_numpy()
     y = df.quadrant.to_numpy()
 
@@ -85,5 +85,7 @@ def loadDataset(dataset, imageSize, numberProcesses, classSample = None):
 
     X = X/255
     y_labeled = to_categorical(y, 9)
+
+    print("TOTAL LOAD:", len(X))
 
     return X, y, y_labeled
