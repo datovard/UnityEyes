@@ -5,6 +5,11 @@ import numpy as np
 from src.utils.loadDataset import loadDataset
 from src.utils.writeReport import writeRecordOnReport
 from test import testModel
+import gc
+import time
+import datetime
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 np.random.seed(1000)
 
@@ -25,18 +30,38 @@ DEFAULT_VALUES = {
 
 DEFAULT_TEST = [
     {
+        "dataset": './input/test/Dataset 1/',
+        "classSample": None
+    },
+    {
+        "dataset": './input/test/Dataset 2/',
+        "classSample": None
+    },
+    {
+        "dataset": './input/test/Dataset 3/',
+        "classSample": None
+    },
+    {
         "dataset": './input/test/Real Test/',
         "classSample": 30
     },
     {
         "dataset": './input/test/Real Test 2/',
         "classSample": None
+    },
+    {
+        "dataset": './input/test/Real Test 3/',
+        "classSample": None
+    },
+    {
+        "dataset": './input/test/Real Test 4/',
+        "classSample": None
     }
 ]
 
 NUMBER_PROCESSES = 10
 FILENAME = './input/results.csv'
-CLASS_SAMPLE = 50
+CLASS_SAMPLE = None
 INPUTS = {}
 
 def loadInputs():
@@ -53,7 +78,26 @@ def loadInputs():
 
         cases.append(copied)
     
+    for i in range(10):
+        copied = DEFAULT_VALUES.copy()
+
+        j = -3 * np.random.random()
+        learningRate = 10 ** j
+        copied["learningRate"] = learningRate
+        copied["tests"] = DEFAULT_TEST
+        copied["augmentation"] = {
+            "rotation_range": 12,
+            "width_shift_range": 0.1,
+            "height_shift_range": 0.1,
+            "zoom_range": [0.65,1.0],
+            "fill_mode": "nearest"
+        }
+
+        cases.append(copied)
+
     INPUTS["./input/train/Dataset 1/"] = cases
+    INPUTS["./input/train/Dataset 2/"] = cases
+    INPUTS["./input/train/Dataset 3/"] = cases
 
 OUTPUT = './output/models/'
 TEST_INPUT = '' # './input/test/Real Test/'
@@ -61,10 +105,14 @@ LOGS_OUTPUT = "./output/logs/fit/"
 
 if __name__ == '__main__':
     loadInputs()
+    previousDataset = ''
     for dataset in INPUTS:
         for configuration in INPUTS[dataset]:
-            print("LOADING DATASET:", dataset)
-            X, y, y_labeled = loadDataset(dataset, configuration["imageSize"], NUMBER_PROCESSES, CLASS_SAMPLE)
+            if(dataset != previousDataset):
+                print("LOADING DATASET:", dataset)
+                X, y, y_labeled = loadDataset(dataset, configuration["imageSize"], NUMBER_PROCESSES, CLASS_SAMPLE)
+            else:
+                print("USING PREVIOUSLY LODADED DATASET:", dataset)
 
             if "hardTest" in configuration:
                 print("USING HARD TEST")
@@ -73,6 +121,9 @@ if __name__ == '__main__':
             else:
                 trainX, testX, trainY, testY = train_test_split(X, y_labeled, test_size=.3)
 
+            print("CONFIGURATION:", configuration)
+            
+            start_time = time.time()
             model = MiniGoogleNet(
                 inputShape = configuration["imageSize"], 
                 classes = 9, 
@@ -89,6 +140,7 @@ if __name__ == '__main__':
             history = model.fit((trainX, trainY), (testX, testY))
             
             model.save(OUTPUT)
+            totalTrainingTime = (time.time() - start_time)
 
             testsResults = []
             for test in configuration["tests"]:
@@ -112,10 +164,16 @@ if __name__ == '__main__':
             writeRecordOnReport(
                 model.getName(),
                 dataset,
+                len(X),
                 configuration["imageSize"],
+                str(datetime.timedelta(seconds = totalTrainingTime)),
                 configuration["epochSize"],
                 configuration["learningRate"],
                 configuration["batchSize"],
                 configuration["augmentation"],
                 model.getSpecialValues(configuration),
                 testsResults)
+            
+            del model, testsResults
+            gc.collect()
+            previousDataset = dataset

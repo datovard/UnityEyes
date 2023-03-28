@@ -81,7 +81,12 @@ class MiniGoogleNet:
     def compileModel(self):
         self.model.compile(
             loss = "categorical_crossentropy",
-            optimizer = SGD(learning_rate = self.learningRate, momentum = self.momentum),
+            optimizer = SGD(
+                learning_rate = self.learningRate, 
+                momentum = self.momentum,
+                clipnorm=1.0,
+                clipvalue=0.5
+            ),
             metrics = ["accuracy"])
     
     def fit(self, trainData, testData):
