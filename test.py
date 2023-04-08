@@ -10,8 +10,8 @@ os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 IMAGE_SIZE = (32, 32, 1)
 
 NUMBER_PROCESSES = 10
-DATASET = './input/test/Real Test 3/'
-MODEL = './output/models/miniGoogLeNet-20230327-000357.h5'
+DATASET = './input/test/Real Test 4/'
+MODEL = './output/models/miniGoogLeNet-20230403-204545.h5'
 
 def getPredictedClass(predictions):
     y_pred_class = []

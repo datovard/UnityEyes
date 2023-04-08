@@ -1,4 +1,5 @@
 
+from src.models.AlexNet.AlexNet import AlexNet
 from src.models.GoogLeNet.MiniGoogleNet import MiniGoogleNet
 from sklearn.model_selection import train_test_split
 import numpy as np
@@ -9,6 +10,7 @@ import gc
 import time
 import datetime
 import os
+from numpy import random
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
 np.random.seed(1000)
@@ -18,7 +20,6 @@ DEFAULT_VALUES = {
     "batchSize": 64,
     "epochSize": 100,
     "learningRate": 5e-3,
-    "momentum": 0.9,
     "augmentation": {
         "rotation_range": 2,
         "width_shift_range": 0.3,
@@ -73,31 +74,52 @@ def loadInputs():
 
         j = -3 * np.random.random()
         learningRate = 10 ** j
+
+        copied["imageSize"] = (120, 120, 1)
         copied["learningRate"] = learningRate
         copied["tests"] = DEFAULT_TEST
 
         cases.append(copied)
+
+    # for i in range(10):
+    #     copied = DEFAULT_VALUES.copy()
+
+    #     j = -3 * np.random.random()
+    #     learningRate = 10 ** j
+
+    #     # learningRate = random.randint(1, 100)/1000
+    #     copied["learningRate"] = learningRate
+    #     copied["tests"] = DEFAULT_TEST
+    #     copied["augmentation"] = {
+    #         "rotation_range": 2,
+    #         "width_shift_range": 0.1,
+    #         "height_shift_range": 0.1,
+    #         "zoom_range": [0.65,1.0],
+    #         "fill_mode": "nearest"
+    #     }
+
+    #     cases.append(copied)
     
-    for i in range(10):
-        copied = DEFAULT_VALUES.copy()
+    # for i in range(10):
+    #     copied = DEFAULT_VALUES.copy()
 
-        j = -3 * np.random.random()
-        learningRate = 10 ** j
-        copied["learningRate"] = learningRate
-        copied["tests"] = DEFAULT_TEST
-        copied["augmentation"] = {
-            "rotation_range": 12,
-            "width_shift_range": 0.1,
-            "height_shift_range": 0.1,
-            "zoom_range": [0.65,1.0],
-            "fill_mode": "nearest"
-        }
+    #     j = -3 * np.random.random()
+    #     learningRate = 10 ** j
+    #     copied["learningRate"] = learningRate
+    #     copied["tests"] = DEFAULT_TEST
+    #     copied["augmentation"] = {
+    #         "rotation_range": 12,
+    #         "width_shift_range": 0.1,
+    #         "height_shift_range": 0.1,
+    #         "zoom_range": [0.65,1.0],
+    #         "fill_mode": "nearest"
+    #     }
 
-        cases.append(copied)
+    #     cases.append(copied)
 
-    INPUTS["./input/train/Dataset 1/"] = cases
+    #INPUTS["./input/train/Dataset 1/"] = cases
     INPUTS["./input/train/Dataset 2/"] = cases
-    INPUTS["./input/train/Dataset 3/"] = cases
+    # INPUTS["./input/train/Dataset 3/"] = cases
 
 OUTPUT = './output/models/'
 TEST_INPUT = '' # './input/test/Real Test/'
@@ -124,56 +146,57 @@ if __name__ == '__main__':
             print("CONFIGURATION:", configuration)
             
             start_time = time.time()
-            model = MiniGoogleNet(
+            model = AlexNet(
                 inputShape = configuration["imageSize"], 
                 classes = 9, 
                 batchSize = configuration["batchSize"],
                 epochs = configuration["epochSize"],
                 learningRate = configuration["learningRate"],
-                momentum = configuration["momentum"],
                 augmentations = configuration["augmentation"],
                 logsOutput = LOGS_OUTPUT
             )
 
             model.compileModel()
-            
-            history = model.fit((trainX, trainY), (testX, testY))
-            
-            model.save(OUTPUT)
-            totalTrainingTime = (time.time() - start_time)
-
             testsResults = []
-            for test in configuration["tests"]:
-                response = testModel(
-                    './output/models/' + model.getName() + '.h5',
-                    test["dataset"],
+            totalTrainingTime = 0
+            try:
+                history = model.fit((trainX, trainY), (testX, testY))
+                totalTrainingTime = (time.time() - start_time)
+            except:
+                print("ERROR")
+            else:
+                model.save(OUTPUT)
+                for test in configuration["tests"]:
+                    response = testModel(
+                        './output/models/' + model.getName() + '.h5',
+                        test["dataset"],
+                        configuration["imageSize"],
+                        NUMBER_PROCESSES,
+                        test["classSample"]
+                    )
+
+                    testsResults.append({
+                        "dataset": test["dataset"],
+                        "scores": { 
+                            "score": response[0][0],
+                            "accuracy": response[0][1],
+                        },
+                        "matrix": response[1].tolist()
+                    })
+            finally:
+                writeRecordOnReport(
+                    model.getName(),
+                    dataset,
+                    len(X),
                     configuration["imageSize"],
-                    NUMBER_PROCESSES,
-                    test["classSample"]
-                )
-
-                testsResults.append({
-                    "dataset": test["dataset"],
-                    "scores": { 
-                        "score": response[0][0],
-                        "accuracy": response[0][1],
-                    },
-                    "matrix": response[1].tolist()
-                })
-
-            writeRecordOnReport(
-                model.getName(),
-                dataset,
-                len(X),
-                configuration["imageSize"],
-                str(datetime.timedelta(seconds = totalTrainingTime)),
-                configuration["epochSize"],
-                configuration["learningRate"],
-                configuration["batchSize"],
-                configuration["augmentation"],
-                model.getSpecialValues(configuration),
-                testsResults)
-            
-            del model, testsResults
-            gc.collect()
+                    str(datetime.timedelta(seconds = totalTrainingTime)),
+                    configuration["epochSize"],
+                    configuration["learningRate"],
+                    configuration["batchSize"],
+                    configuration["augmentation"],
+                    model.getSpecialValues(configuration),
+                    testsResults)
+                
+                del model, testsResults
+                gc.collect()
             previousDataset = dataset
