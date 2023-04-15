@@ -88,7 +88,7 @@ class AlexNet:
 
         self.runName += "-" + datetime.now().strftime("%Y%m%d-%H%M%S")
         self.callbacks = [
-            ReduceLROnPlateau(   monitor='val_accuracy',   factor=.01,   patience=3,  min_lr=1e-5),
+            ReduceLROnPlateau(monitor='val_accuracy', factor=.01, patience=3, min_lr=1e-5),
             TensorBoard(log_dir=logsOutput + self.runName, histogram_freq=1)
         ]
 

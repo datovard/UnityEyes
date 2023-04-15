@@ -43,7 +43,7 @@ DEFAULT_TEST = [
         "classSample": None
     },
     {
-        "dataset": './input/test/Real Test/',
+        "dataset": './input/test/Real Test 1/',
         "classSample": 30
     },
     {
@@ -69,57 +69,103 @@ def loadInputs():
     global INPUTS
     cases = []
 
-    for i in range(10):
-        copied = DEFAULT_VALUES.copy()
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.00140978
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
 
-        j = -3 * np.random.random()
-        learningRate = 10 ** j
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.00140978
+    copied["batchSize"] = 128
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
 
-        copied["imageSize"] = (120, 120, 1)
-        copied["learningRate"] = learningRate
-        copied["tests"] = DEFAULT_TEST
-
-        cases.append(copied)
-
-    # for i in range(10):
-    #     copied = DEFAULT_VALUES.copy()
-
-    #     j = -3 * np.random.random()
-    #     learningRate = 10 ** j
-
-    #     # learningRate = random.randint(1, 100)/1000
-    #     copied["learningRate"] = learningRate
-    #     copied["tests"] = DEFAULT_TEST
-    #     copied["augmentation"] = {
-    #         "rotation_range": 2,
-    #         "width_shift_range": 0.1,
-    #         "height_shift_range": 0.1,
-    #         "zoom_range": [0.65,1.0],
-    #         "fill_mode": "nearest"
-    #     }
-
-    #     cases.append(copied)
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.00140978
+    copied["batchSize"] = 256
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
     
+
+
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.002983856
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
+
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.002983856
+    copied["batchSize"] = 128
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
+
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.002983856
+    copied["batchSize"] = 256
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
+
+    
+    
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.230675758
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
+    
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.230675758
+    copied["batchSize"] = 128
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
+
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.230675758
+    copied["batchSize"] = 256
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
+
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.754868192
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
+    
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.754868192
+    copied["batchSize"] = 128
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
+
+    copied = DEFAULT_VALUES.copy()
+    learningRate = 0.754868192
+    copied["batchSize"] = 256
+    copied["learningRate"] = learningRate
+    copied["tests"] = DEFAULT_TEST
+    cases.append(copied)
+
     # for i in range(10):
     #     copied = DEFAULT_VALUES.copy()
 
     #     j = -3 * np.random.random()
     #     learningRate = 10 ** j
+
+    #     copied["imageSize"] = (64, 64, 1)
     #     copied["learningRate"] = learningRate
     #     copied["tests"] = DEFAULT_TEST
-    #     copied["augmentation"] = {
-    #         "rotation_range": 12,
-    #         "width_shift_range": 0.1,
-    #         "height_shift_range": 0.1,
-    #         "zoom_range": [0.65,1.0],
-    #         "fill_mode": "nearest"
-    #     }
 
     #     cases.append(copied)
 
-    #INPUTS["./input/train/Dataset 1/"] = cases
-    INPUTS["./input/train/Dataset 2/"] = cases
-    # INPUTS["./input/train/Dataset 3/"] = cases
+    INPUTS["./input/train/Dataset 4/"] = cases
 
 OUTPUT = './output/models/'
 TEST_INPUT = '' # './input/test/Real Test/'
@@ -146,12 +192,13 @@ if __name__ == '__main__':
             print("CONFIGURATION:", configuration)
             
             start_time = time.time()
-            model = AlexNet(
+            model = MiniGoogleNet(
                 inputShape = configuration["imageSize"], 
                 classes = 9, 
                 batchSize = configuration["batchSize"],
                 epochs = configuration["epochSize"],
                 learningRate = configuration["learningRate"],
+                momentum = 0.9,
                 augmentations = configuration["augmentation"],
                 logsOutput = LOGS_OUTPUT
             )

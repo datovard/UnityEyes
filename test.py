@@ -7,12 +7,12 @@ from sklearn.metrics import confusion_matrix
 from src.utils.loadDataset import loadDataset
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
-IMAGE_SIZE = (32, 32, 1)
+IMAGE_SIZE = (120, 120, 1)
 
 NUMBER_PROCESSES = 10
-DATASET = './input/test/Real Test 4/'
-MODEL = './output/models/miniGoogLeNet-20230403-204545.h5'
-
+DATASET = './input/test/Real Test 2/'
+MODEL = './output/models/miniGoogLeNet-20230408-191829.h5'
+CLASS_SAMPLE= None
 def getPredictedClass(predictions):
     y_pred_class = []
 
@@ -36,7 +36,7 @@ def testModel(modelName, dataset, imageSize, numberProcesses, classSample = None
     return [score, confusion_mtx]
 
 if __name__ == '__main__':
-    response = testModel(MODEL, DATASET, IMAGE_SIZE, NUMBER_PROCESSES)
+    response = testModel(MODEL, DATASET, IMAGE_SIZE, NUMBER_PROCESSES, CLASS_SAMPLE)
 
     print('Test Score = ', response[0][0])
     print('Test Accuracy = ', response[0][1])

@@ -8,7 +8,7 @@ from keras.layers.convolutional import Conv2D, AveragePooling2D, MaxPooling2D
 from keras.layers.core import Activation, Dropout, Dense
 from keras.layers import Flatten, Input, concatenate
 from keras.models import Model
-from keras.callbacks import LearningRateScheduler, TensorBoard
+from keras.callbacks import LearningRateScheduler, EarlyStopping, TensorBoard
 from keras.preprocessing.image import ImageDataGenerator
 import os
 from datetime import datetime
@@ -75,6 +75,7 @@ class MiniGoogleNet:
         self.runName += "-" + datetime.now().strftime("%Y%m%d-%H%M%S")
         self.callbacks = [
             LearningRateScheduler(self.polynomialDecay),
+            # EarlyStopping(monitor='val_loss', mode='min', verbose=1, patience=5),
             TensorBoard(log_dir=logsOutput + self.runName, histogram_freq=1)
         ]
     
@@ -152,6 +153,6 @@ class MiniGoogleNet:
     
     def getSpecialValues(self, configuration):
         return {
-            "momentum": configuration["momentum"],
+            "momentum": self.momentum,
             "hard-test": configuration["hardTest"] if "hardTest" in configuration else False
         }
