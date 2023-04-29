@@ -1,5 +1,10 @@
+# Based on "GoogleNet Architecture Implementation in Keras with CIFAR-10 Dataset"
+# Avaialble at
+# https://machinelearningknowledge.ai/googlenet-architecture-implementation-in-keras-with-cifar-10-dataset/
+
+
 from tensorflow.keras.applications import ResNet50
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.optimizers import Adam
 from keras.models import Model
 from keras.callbacks import LearningRateScheduler, TensorBoard
 from keras.preprocessing.image import ImageDataGenerator
@@ -7,25 +12,23 @@ import os
 from datetime import datetime
 from src.utils.writeReport import writeRecordOnReport
 
-class ResNet:
+class ResNetAdam:
     model = Model
     callbacks = []
-    name = "resNet"
+    name = "resNetAdam"
     runName = name
     
     inputShape = ()
     batchSize = 64
     epochs = 100
     learningRate = 5e-3
-    momentum = 0.9
     augmentations = {}
 
-    def __init__(self, inputShape, classes, batchSize, epochs, learningRate, momentum, augmentations, logsOutput):
+    def __init__(self, inputShape, classes, batchSize, epochs, learningRate, augmentations, logsOutput):
         self.inputShape = inputShape
         self.batchSize = batchSize
         self.epochs = epochs
         self.learningRate = learningRate
-        self.momentum = momentum
         self.augmentations = ImageDataGenerator(**augmentations)
 
         # Create the model
@@ -46,12 +49,11 @@ class ResNet:
     def compileModel(self):
         self.model.compile(
             loss = "categorical_crossentropy",
-            optimizer = SGD(
-                learning_rate = self.learningRate, 
-                momentum = self.momentum,
+            optimizer= Adam(
+                learning_rate = self.learningRate,
                 clipnorm = 1.0,
-                clipvalue = 0.5
-            ),
+                clipvalue = 0.5,
+            ), 
             metrics = ["accuracy"])
     
     def fit(self, trainData, testData):
@@ -73,7 +75,7 @@ class ResNet:
     
     def getSpecialValues(self, configuration):
         return {
-            "momentum": self.momentum,
+            "momentum": configuration["momentum"],
             "hard-test": configuration["hardTest"] if "hardTest" in configuration else False
         }
 

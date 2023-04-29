@@ -1,4 +1,8 @@
 
+from src.models.EfficientNetAdam.EfficientNetAdam import EfficientNetAdam
+from src.models.EfficientNet.EfficientNet import EfficientNet
+from src.models.ResNetAdam.ResNetAdam import ResNetAdam
+from src.models.ResNet.ResNet import ResNet
 from src.models.AlexNet.AlexNet import AlexNet
 from src.models.GoogLeNet.MiniGoogleNet import MiniGoogleNet
 from sklearn.model_selection import train_test_split
@@ -22,8 +26,8 @@ DEFAULT_VALUES = {
     "learningRate": 5e-3,
     "augmentation": {
         "rotation_range": 2,
-        "width_shift_range": 0.3,
-        "height_shift_range": 0.3,
+        "width_shift_range": 0.1,
+        "height_shift_range": 0.1,
         "fill_mode": "nearest"
     },
     "tests": []
@@ -68,108 +72,73 @@ INPUTS = {}
 def loadInputs():
     global INPUTS
     cases = []
+    for i in range(10):
+        learningRate = random.uniform(0, 1)
+        copied = DEFAULT_VALUES.copy()
+        copied["learningRate"] = learningRate
+        copied["batchSize"] = 256
+        copied["tests"] = DEFAULT_TEST
+        copied["model"] = "ResNet"
+        cases.append(copied)
 
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.00140978
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
+        learningRate = random.uniform(0, 1)
+        copied = DEFAULT_VALUES.copy()
+        copied["learningRate"] = learningRate
+        copied["batchSize"] = 256
+        copied["tests"] = DEFAULT_TEST
+        copied["model"] = "EfficientNet"
+        cases.append(copied)
 
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.00140978
-    copied["batchSize"] = 128
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
-
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.00140978
-    copied["batchSize"] = 256
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
-    
-
-
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.002983856
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
-
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.002983856
-    copied["batchSize"] = 128
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
-
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.002983856
-    copied["batchSize"] = 256
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
-
-    
-    
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.230675758
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
-    
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.230675758
-    copied["batchSize"] = 128
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
-
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.230675758
-    copied["batchSize"] = 256
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
-
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.754868192
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
-    
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.754868192
-    copied["batchSize"] = 128
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
-
-    copied = DEFAULT_VALUES.copy()
-    learningRate = 0.754868192
-    copied["batchSize"] = 256
-    copied["learningRate"] = learningRate
-    copied["tests"] = DEFAULT_TEST
-    cases.append(copied)
-
-    # for i in range(10):
-    #     copied = DEFAULT_VALUES.copy()
-
-    #     j = -3 * np.random.random()
-    #     learningRate = 10 ** j
-
-    #     copied["imageSize"] = (64, 64, 1)
-    #     copied["learningRate"] = learningRate
-    #     copied["tests"] = DEFAULT_TEST
-
-    #     cases.append(copied)
-
+    INPUTS["./input/train/Dataset 2/"] = cases
     INPUTS["./input/train/Dataset 4/"] = cases
 
 OUTPUT = './output/models/'
 TEST_INPUT = '' # './input/test/Real Test/'
 LOGS_OUTPUT = "./output/logs/fit/"
+
+def getModelInstance(configuration):
+    if(configuration["model"] == "ResNet"):
+        return ResNet(
+                inputShape = configuration["imageSize"], 
+                classes = 9, 
+                batchSize = configuration["batchSize"],
+                epochs = configuration["epochSize"],
+                learningRate = configuration["learningRate"],
+                augmentations = configuration["augmentation"],
+                momentum = 0.9,
+                logsOutput = LOGS_OUTPUT
+            )
+    elif(configuration["model"] == "ResNetAdam"):
+        return ResNetAdam(
+                inputShape = configuration["imageSize"], 
+                classes = 9, 
+                batchSize = configuration["batchSize"],
+                epochs = configuration["epochSize"],
+                learningRate = configuration["learningRate"],
+                augmentations = configuration["augmentation"],
+                logsOutput = LOGS_OUTPUT
+            )
+    elif(configuration["model"] == "EfficientNet"):
+        return EfficientNet(
+                inputShape = configuration["imageSize"], 
+                classes = 9, 
+                batchSize = configuration["batchSize"],
+                epochs = configuration["epochSize"],
+                learningRate = configuration["learningRate"],
+                augmentations = configuration["augmentation"],
+                momentum = 0.9,
+                logsOutput = LOGS_OUTPUT
+            )
+    elif(configuration["model"] == "EfficientNetAdam"):
+        return EfficientNetAdam(
+                inputShape = configuration["imageSize"], 
+                classes = 9, 
+                batchSize = configuration["batchSize"],
+                epochs = configuration["epochSize"],
+                learningRate = configuration["learningRate"],
+                augmentations = configuration["augmentation"],
+                logsOutput = LOGS_OUTPUT
+            )
 
 if __name__ == '__main__':
     loadInputs()
@@ -192,18 +161,9 @@ if __name__ == '__main__':
             print("CONFIGURATION:", configuration)
             
             start_time = time.time()
-            model = MiniGoogleNet(
-                inputShape = configuration["imageSize"], 
-                classes = 9, 
-                batchSize = configuration["batchSize"],
-                epochs = configuration["epochSize"],
-                learningRate = configuration["learningRate"],
-                momentum = 0.9,
-                augmentations = configuration["augmentation"],
-                logsOutput = LOGS_OUTPUT
-            )
-
+            model = getModelInstance(configuration)
             model.compileModel()
+
             testsResults = []
             totalTrainingTime = 0
             try:

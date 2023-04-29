@@ -1,57 +1,54 @@
-from tensorflow.keras.applications import ResNet50
-from tensorflow.keras.optimizers import SGD
+from tensorflow.keras.applications import EfficientNetV2B0
+from tensorflow.keras.optimizers import Adam
 from keras.models import Model
-from keras.callbacks import LearningRateScheduler, TensorBoard
+from keras.callbacks import ReduceLROnPlateau, TensorBoard
 from keras.preprocessing.image import ImageDataGenerator
 import os
 from datetime import datetime
 from src.utils.writeReport import writeRecordOnReport
 
-class ResNet:
+class EfficientNetAdam:
     model = Model
     callbacks = []
-    name = "resNet"
+    name = "EfficientNetAdam"
     runName = name
     
     inputShape = ()
     batchSize = 64
     epochs = 100
     learningRate = 5e-3
-    momentum = 0.9
     augmentations = {}
 
-    def __init__(self, inputShape, classes, batchSize, epochs, learningRate, momentum, augmentations, logsOutput):
+    def __init__(self, inputShape, classes, batchSize, epochs, learningRate, augmentations, logsOutput):
         self.inputShape = inputShape
         self.batchSize = batchSize
         self.epochs = epochs
         self.learningRate = learningRate
-        self.momentum = momentum
         self.augmentations = ImageDataGenerator(**augmentations)
 
         # Create the model
-        self.model = ResNet50(
+        self.model = EfficientNetV2B0(
             include_top = True,
-            input_shape = self.inputShape,
             weights = None,
+            input_shape = self.inputShape,
             classes = classes,
             classifier_activation = "softmax"
         )
         
         self.runName += "-" + datetime.now().strftime("%Y%m%d-%H%M%S")
         self.callbacks = [
-            LearningRateScheduler(self.polynomialDecay),
+            ReduceLROnPlateau(monitor='val_accuracy', factor=.01, patience=3, min_lr=1e-5),
             TensorBoard(log_dir=logsOutput + self.runName, histogram_freq=1)
         ]
     
     def compileModel(self):
         self.model.compile(
             loss = "categorical_crossentropy",
-            optimizer = SGD(
-                learning_rate = self.learningRate, 
-                momentum = self.momentum,
+            optimizer= Adam(
+                learning_rate = self.learningRate,
                 clipnorm = 1.0,
-                clipvalue = 0.5
-            ),
+                clipvalue = 0.5,
+            ), 
             metrics = ["accuracy"])
     
     def fit(self, trainData, testData):
@@ -73,7 +70,6 @@ class ResNet:
     
     def getSpecialValues(self, configuration):
         return {
-            "momentum": self.momentum,
             "hard-test": configuration["hardTest"] if "hardTest" in configuration else False
         }
 

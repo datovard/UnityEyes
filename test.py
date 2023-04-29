@@ -7,11 +7,11 @@ from sklearn.metrics import confusion_matrix
 from src.utils.loadDataset import loadDataset
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3' 
 
-IMAGE_SIZE = (120, 120, 1)
+IMAGE_SIZE = (32, 32, 3)
 
 NUMBER_PROCESSES = 10
-DATASET = './input/test/Real Test 2/'
-MODEL = './output/models/miniGoogLeNet-20230408-191829.h5'
+DATASET = './input/test/Real Features 2/'
+MODEL = './output/models/AlexNet-20230420-234554.h5'
 CLASS_SAMPLE= None
 def getPredictedClass(predictions):
     y_pred_class = []

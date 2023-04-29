@@ -1,4 +1,4 @@
-from tensorflow.keras.applications import ResNet50
+from tensorflow.keras.applications import EfficientNetV2B0
 from tensorflow.keras.optimizers import SGD
 from keras.models import Model
 from keras.callbacks import LearningRateScheduler, TensorBoard
@@ -7,10 +7,10 @@ import os
 from datetime import datetime
 from src.utils.writeReport import writeRecordOnReport
 
-class ResNet:
+class EfficientNet:
     model = Model
     callbacks = []
-    name = "resNet"
+    name = "EfficientNet"
     runName = name
     
     inputShape = ()
@@ -29,10 +29,10 @@ class ResNet:
         self.augmentations = ImageDataGenerator(**augmentations)
 
         # Create the model
-        self.model = ResNet50(
+        self.model = EfficientNetV2B0(
             include_top = True,
-            input_shape = self.inputShape,
             weights = None,
+            input_shape = self.inputShape,
             classes = classes,
             classifier_activation = "softmax"
         )
@@ -49,8 +49,8 @@ class ResNet:
             optimizer = SGD(
                 learning_rate = self.learningRate, 
                 momentum = self.momentum,
-                clipnorm = 1.0,
-                clipvalue = 0.5
+                clipnorm=1.0,
+                clipvalue=0.5
             ),
             metrics = ["accuracy"])
     
